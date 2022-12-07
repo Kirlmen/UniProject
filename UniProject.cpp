@@ -9,6 +9,8 @@ using namespace std;
 static int createDB(const char* s);
 static int createTable(const char* s);
 static int insertData(const char* s);
+static int selectData(const char* s);
+
 
 class Books
 {
@@ -50,13 +52,6 @@ void Auth()
     }
 }
 
-void RegisterBook()
-{
-    Books b;
-
-    
-}
-
 
 
 
@@ -87,6 +82,7 @@ int main(int argc, char const* argv[])
         break;
     case 2:
         cout << "searching category";
+        selectData(dir);
         break;
     case 3:
         cout << "searching books";
@@ -98,35 +94,49 @@ int main(int argc, char const* argv[])
     return 0;
 }
 
+
 static int insertData(const char* s)
 {
     Books b;
     sqlite3* DB;
     char* messageError;
+    bool wantToContinue = false;
+    string inputContinue;
 
-    int exit = sqlite3_open(s, &DB);
+    do
+    {
+        int exit = sqlite3_open(s, &DB); //it'll take the address in memory and use it in exec() func. (0x085121 for ex.)
 
-    cout << "Book's Title: \n";
-    cin >> b.Title;
-    cout << "Book's Author: \n";
-    cin >> b.Author;
-    cout << "Book's Page: \n";
-    cin >> b.Page;
-    cout << "Book's Category: \n";
-    cin >> b.Categhory;
+        cout << "Book's Title: \n";
+        cin >> b.Title;
+        cout << "Book's Author: \n";
+        cin >> b.Author;
+        cout << "Book's Page: \n";
+        cin >> b.Page;
+        cout << "Book's Category: \n";
+        cin >> b.Categhory;
 
-   string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Categhory + "'); ");
-    
+        //sqlite3 can catch the variable without an error whether string or int anyway so no need to specify the page var as a integer.
+        string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Categhory + "'); ");
+
+
+        exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
+        if (exit != SQLITE_OK) {
+            cerr << "Error Inserting the data." << endl;
+            sqlite3_free(messageError);
+        }
+        else
+            cout << "Successfully Recorded!" << endl;
+
+        cout << "Want to insert data again? yes [y], no [n]" << endl;
+        cin >> inputContinue;
+        inputContinue == "y" ? wantToContinue = true : false;
+        
+    } while (wantToContinue);
+
    
-    exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
-    if (exit != SQLITE_OK) {
-        cerr << "Error in insertData function." << endl;
-        sqlite3_free(messageError);
-    }
-    else
-        cout << "Records inserted Successfully!" << endl;
-
     return 0;
+    
 }
 
 static int createDB(const char* s)
@@ -154,7 +164,7 @@ static int createTable(const char* s)
 
     try
     {
-        int exit = 0;
+        int exit = 0; 
         exit = sqlite3_open(s, &DB);
     
         exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError); //just a callback
@@ -171,5 +181,50 @@ static int createTable(const char* s)
         cerr << e.what();
     }
 
+    return 0;
+}
+
+static int callbackFunc(void* unused, int count, char** data, char** columns)
+{
+    int i;
+   
+    for (i = 0; i < count; i++) {
+        printf("The data in column \"%s\" is: %s\n", columns[i], data[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
+
+static int selectData(const char* s)
+{
+    sqlite3* DB;
+    int exit = 0;
+    exit = sqlite3_open(s, &DB);
+    
+    cout << "Options: [1]: Print All Books, [2]: Search Book by the Name, [3]: Search Book by the ID, [4]: Search Book by the Category" << endl; //literally a TODO: Right now.
+    int _selection;
+    cin >> _selection;
+
+    
+    switch (_selection)
+    {
+    case 1:
+        exit = sqlite3_exec(DB, "SELECT * FROM BOOKS", callbackFunc, NULL, NULL); //for all books
+        break;
+    case 2:
+        break;
+    case 3:
+        break;
+    case 4: 
+        break;
+    default:
+        break;
+    }
+
+    
+
+    
     return 0;
 }

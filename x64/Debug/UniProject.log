@@ -1,3 +1,3 @@
 ﻿  UniProject.cpp
-C:\Programming\UniProject\UniProject.cpp(69,14): warning C4101: 'DB': unreferenced local variable
-  UniProject.vcxproj -> C:\Programming\UniProject\x64\Debug\UniProject.exe
+C:\Programming\UniProject\UniProject.cpp(64,14): warning C4101: 'DB': unreferenced local variable
+C:\Programming\UniProject\UniProject.cpp(209): error C4700: uninitialized local variable 'DB' used

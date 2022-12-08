@@ -11,6 +11,8 @@ static int createDB(const char* s);
 static int createTable(const char* s);
 static int insertData(const char* s);
 static int selectData(const char* s);
+static int returnToMain();
+static int mainMenu();
 
 
 class Books
@@ -54,10 +56,12 @@ void Auth()
 }
 
 
+//TODO: UPDATE AND DELETE FROM DB.
+//TODO: POLISHING THE MENU
+//TODO: PRINTING THE DATA TO TXT FILE
 
 
-
-int main(int argc, char const* argv[])
+int main()
 {
 	//Auth();
 
@@ -67,33 +71,8 @@ int main(int argc, char const* argv[])
 	createDB(dir); //creating the database file
 	createTable(dir); //creating the table
 
+	mainMenu();
 
-
-
-	//MENU VARS
-	cout << "Register a Book press [1]\n Search a Book press [2]\n Delete Book from DB press [3]\n";
-	int options;
-	cin >> options;
-
-	switch (options)
-	{
-	case 1:
-		cout << "registering books\n";
-		system("CLS");
-		insertData(dir);
-		break;
-	case 2:
-		cout << "searching category";
-		Sleep(500);
-		system("CLS");
-		selectData(dir);
-		break;
-	case 3:
-		cout << "searching books";
-		break;
-	default:
-		break;
-	}
 
 	return 0;
 }
@@ -221,6 +200,7 @@ static int selectData(const char* s)
 	{
 	case 1:
 		exit = sqlite3_exec(DB, "SELECT * FROM BOOKS", callbackFunc, NULL, NULL); //for all books
+		returnToMain();
 		break;
 	case 2:
 		cout << "Title: ";
@@ -256,5 +236,63 @@ static int selectData(const char* s)
 
 
 
+	return 0;
+}
+
+static int updateData(const char* s)
+{
+	sqlite3* DB;
+	int exit = 0;
+
+	exit = sqlite3_open(s, &DB);
+
+	//exit = sqlite3_exec();
+}
+
+static int mainMenu()
+{
+	const char* dir = "C:\\Programming\\UniProject\\Books.db";
+	//MENU VARS
+	cout << "Register a Book press [1]\n Search a Book press [2]\n Delete Book from DB press [3]\n";
+	int options;
+	cin >> options;
+
+	switch (options)
+	{
+	case 1:
+		cout << "Registering Books to Database\n";
+		system("CLS");
+		insertData(dir);
+		break;
+	case 2:
+		cout << "Searching in Database";
+		Sleep(500);
+		system("CLS");
+		selectData(dir);
+		break;
+	case 3:
+		cout << "Deleting from Database";
+		break;
+	}
+
+	return 0;
+}
+
+static int returnToMain()
+{
+	string answer;
+	cout << "Do you want to return to Main Menu? [y] yes, [n] no ";
+	cin >> answer;
+
+	if (answer == "y")
+	{
+		Sleep(500);
+		system("CLS");
+		return mainMenu();
+	}
+	else
+	{
+		exit(0);
+	}
 	return 0;
 }

@@ -33,12 +33,17 @@ public:
 void Auth()
 {
 
-	
-
-	
 	string name;
 	string password;
 	bool canEnter = false;
+
+	//well, gotta do some array for sure.
+	string nameData[100];
+	string passwordData[100];
+	passwordData[0] = "admin";
+	nameData[0] = "admin";
+
+
 	while (true)
 	{
 		system("Color 0A");
@@ -48,7 +53,7 @@ void Auth()
 		cout << setw(60) << "Enter the password: ";
 		cin >> password;
 
-		if (name == "admin" && password == "admin")
+		if (name == nameData[0] && password == passwordData[0])
 		{
 			system("CLS");
 			cout << setw(60) << "Success!" << endl;
@@ -103,7 +108,7 @@ int main()
 	Auth();
 
 	system("Color 07");
-	const char* dir = "C:\\Programming\\UniProject\\Books.db";
+	const char* dir = "C:\\Programming\\UniProject\\Books.db"; //DB's directory
 	sqlite3* DB;
 
 	createDB(dir); //creating the database file
@@ -141,17 +146,21 @@ static int insertData(const char* s)
 	{
 		int exit = sqlite3_open(s, &DB); //it'll take the address in memory and use it in exec() func. (0x085121 for example)
 
-		cout << setw(60) << "Book's Title: ";
+		cout << "					 USE _ INSTEAD OF SPACES (DAN_BROWN)" << endl;
+
+		cout << "					 Book's Title-->";
 		cin >> b.Title;
-		cout << setw(60) << "Book's Author: ";
+		cout << "					 Book's Author-->";
 		cin >> b.Author;
-		cout << setw(60) << "Book's Page: ";
+		cout << "					 Book's Page-->";
 		cin >> b.Page;
-		cout << setw(60) << "Book's Category: ";
+		cout << "					 Book's Given Date-->";
+		cin >> b.Date;
+		cout << "					 Book's Category-->";
 		cin >> b.Category;
 
 		//sqlite3 can catch the variable without an error whether string or int anyway so NO need to specify the page var as a integer.
-		string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Category + "'); ");
+		string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, DATE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Date + "','" + b.Category + "'); ");
 
 
 		exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
@@ -198,29 +207,26 @@ static int createTable(const char* s)
 	sqlite3* DB;
 	char* messageError;
 
+
 	string sql = "CREATE TABLE IF NOT EXISTS BOOKS("
-		"ID INT PRIMARY KEY AUTOINCREMENT, "
-		"TITLE      TEXT NOT NULL, "
+		"ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+		"TITLE     TEXT NOT NULL, "
 		"AUTHOR    TEXT NOT NULL, "
-		"PAGE       INT, "
-		"CATEGORY   CHAR(50) NOT NULL );";
+		"PAGE      INT , "
+		"DATE   TEXT , "
+		"CATEGORY  TEXT NOT NULL );";
 
-	try
-	{
-		int exit = 0;
-		exit = sqlite3_open(s, &DB);
 
-		exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError); //just a callback
-		if (exit != SQLITE_OK) {
-			cerr << "Error in createTable function." << endl;
-			sqlite3_free(messageError);
-		}
-		sqlite3_close(DB);
+	int exit = 0;
+	exit = sqlite3_open(s, &DB);
+
+	exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError); //just a callback
+	if (exit != SQLITE_OK) {
+		cout << "Error in createTable function." << endl;
+		sqlite3_free(messageError);
 	}
-	catch (const exception& e)
-	{
-		cerr << e.what();
-	}
+	sqlite3_close(DB);
+
 
 	return 0;
 }

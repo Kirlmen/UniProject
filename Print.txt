@@ -1,5 +1,6 @@
-ID= 31
-TITLE= a
-AUTHOR= c
-PAGE= v
-CATEGORY= b
+ID= 5
+TITLE= Hitchikers_Guide_to_the_Galaxy
+AUTHOR= Douglas_Adams
+PAGE= 224
+DATE= -
+CATEGORY= Sci-Fi

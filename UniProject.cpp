@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <sqlite3.h>
+#include <fstream>
 
 using namespace std;
 
@@ -13,13 +14,14 @@ static int insertData(const char* s);
 static int selectData(const char* s);
 static int returnToMain();
 static int mainMenu();
+static int deleteData(const char* s);
 
 
 class Books
 {
 public:
 	string Title;
-	string Categhory;
+	string Category;
 	string Author;
 	string Page;
 	string Date;
@@ -55,8 +57,6 @@ void Auth()
 	}
 }
 
-
-//TODO: UPDATE AND DELETE FROM DB.
 //TODO: POLISHING THE MENU
 //TODO: PRINTING THE DATA TO TXT FILE
 
@@ -97,10 +97,10 @@ static int insertData(const char* s)
 		cout << "Book's Page: \n";
 		cin >> b.Page;
 		cout << "Book's Category: \n";
-		cin >> b.Categhory;
+		cin >> b.Category;
 
 		//sqlite3 can catch the variable without an error whether string or int anyway so NO need to specify the page var as a integer.
-		string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Categhory + "'); ");
+		string sql("INSERT INTO BOOKS (TITLE, AUTHOR, PAGE, CATEGORY) VALUES('" + b.Title + "','" + b.Author + "','" + b.Page + "','" + b.Category + "'); ");
 
 
 		exit = sqlite3_exec(DB, sql.c_str(), NULL, 0, &messageError);
@@ -111,12 +111,16 @@ static int insertData(const char* s)
 		else
 			cout << "Successfully Recorded!" << endl;
 
+
+		wantToContinue = false;
+		sqlite3_close(DB);
 		cout << "Want to insert data again? yes [y], no [n]" << endl;
 		cin >> inputContinue;
-		inputContinue == "y" ? wantToContinue = true : false;
+		inputContinue == "y" && "Y" ? wantToContinue = true : false;
 
 	} while (wantToContinue);
 
+	return mainMenu();
 
 	return 0;
 
@@ -139,7 +143,7 @@ static int createTable(const char* s)
 	char* messageError;
 
 	string sql = "CREATE TABLE IF NOT EXISTS BOOKS("
-		"ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+		"ID INT PRIMARY KEY AUTOINCREMENT, "
 		"TITLE      TEXT NOT NULL, "
 		"AUTHOR    TEXT NOT NULL, "
 		"PAGE       INT, "
@@ -170,18 +174,24 @@ static int createTable(const char* s)
 static int callbackFunc(void* unused, int count, char** data, char** columns)
 {
 	int i;
+	ofstream pout;
+	pout.open("Print.txt");
+	string printData;
 
 	for (i = 0; i < count; i++) {
 		printf("The data in column \"%s\" is: %s\n", columns[i], data[i]);
+		pout << columns[i] << "= " << data[i] << endl;
 	}
 
 	printf("\n");
 
+	pout.close();
 	return 0;
 }
 
 static int selectData(const char* s)
 {
+	
 	sqlite3* DB;
 	int exit = 0;
 	int _selection;
@@ -194,12 +204,11 @@ static int selectData(const char* s)
 
 	cin >> _selection;
 
-
-
 	switch (_selection)
 	{
 	case 1:
 		exit = sqlite3_exec(DB, "SELECT * FROM BOOKS", callbackFunc, NULL, NULL); //for all books
+		cout << "Printed to the text file. \n";
 		returnToMain();
 		break;
 	case 2:
@@ -208,14 +217,16 @@ static int selectData(const char* s)
 		{ //Solution of: transfer of control bypasses initialization
 			string sqlTitle("SELECT * FROM BOOKS WHERE TITLE='" + _input + "'");
 			exit = sqlite3_exec(DB, sqlTitle.c_str(), callbackFunc, NULL, NULL);
+			cout << "Printed to the text file. \n";
 		}
 		break;
 	case 3:
 		cout << "ID: ";
 		cin >> _input;
 		{
-			string sqlTitle("SELECT * FROM BOOKS WHERE ID='" + _input + "'");
-			exit = sqlite3_exec(DB, sqlTitle.c_str(), callbackFunc, NULL, NULL);
+			string sqlID("SELECT * FROM BOOKS WHERE ID='" + _input + "'");
+			exit = sqlite3_exec(DB, sqlID.c_str(), callbackFunc, NULL, NULL);
+			cout << "Printed to the text file. \n";
 		}
 
 		break;
@@ -223,30 +234,72 @@ static int selectData(const char* s)
 		cout << "Category: ";
 		cin >> _input;
 		{
-			string sqlTitle("SELECT * FROM BOOKS WHERE CATEGORY='" + _input + "'");
-			exit = sqlite3_exec(DB, sqlTitle.c_str(), callbackFunc, NULL, NULL);
+			string sqlCategory("SELECT * FROM BOOKS WHERE CATEGORY='" + _input + "'");
+			exit = sqlite3_exec(DB, sqlCategory.c_str(), callbackFunc, NULL, NULL);
+			cout << "Printed to the text file. \n";
 		}
-
-		break;
-	default:
 
 		break;
 	}
 
-
-
+	sqlite3_close(DB);
 
 	return 0;
 }
 
-static int updateData(const char* s)
+static int deleteData(const char* s)
 {
 	sqlite3* DB;
+	char* messageError;
 	int exit = 0;
-
 	exit = sqlite3_open(s, &DB);
 
-	//exit = sqlite3_exec();
+	cout << "WARNING: YOU CAN ONLY DELETE A BOOK BY USING ID NUMBER!!\n";
+	cout << "[1] Delete the data by the ID, [2] DELETE ALL DATA IN THE DB --->";
+	int selection;
+	string given;
+	string sqlDelete;
+	cin >> selection;
+	if (selection == 1)
+	{
+		cout << "ID--> ";
+		cin >> given;
+		sqlDelete = "DELETE FROM BOOKS WHERE BOOKS.ID = '" + given + "'";
+		exit = sqlite3_exec(DB, sqlDelete.c_str(), callbackFunc, NULL, &messageError);
+		if (exit != SQLITE_OK)
+		{
+			cout << "delete error";
+			sqlite3_free(&messageError);
+			return mainMenu();
+		}
+		else
+		{
+			cout << "Success!";
+		}
+
+		sqlite3_close(DB);
+
+
+	}
+	else if (selection == 2)
+	{
+		string sure;
+		cout << "You sure? yes or no --> ";
+		cin >> sure;
+		if (sure == "yes")
+		{
+			cout << "DELETING ALL THE DATA";
+			Sleep(500);
+			string sqlDeleteAll("DELETE FROM BOOKS");
+			exit = sqlite3_exec(DB, sqlDeleteAll.c_str(), callbackFunc, NULL, NULL);
+		}
+		else { return mainMenu(); }
+	}
+	else { return mainMenu(); }
+
+	sqlite3_close(DB);
+
+	return 0;
 }
 
 static int mainMenu()
@@ -272,6 +325,9 @@ static int mainMenu()
 		break;
 	case 3:
 		cout << "Deleting from Database";
+		Sleep(500);
+		system("CLS");
+		deleteData(dir);
 		break;
 	}
 
